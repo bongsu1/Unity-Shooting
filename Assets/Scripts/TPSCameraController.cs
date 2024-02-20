@@ -24,7 +24,7 @@ public class TPSCameraController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         SetTargetPos();
     }
@@ -40,7 +40,15 @@ public class TPSCameraController : MonoBehaviour
 
     private void SetTargetPos()
     {
-        target.position = Camera.main.transform.position + Camera.main.transform.forward * distance;
+        if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hitInfo, distance))
+        {
+            target.position = Camera.main.transform.position + Camera.main.transform.forward * (hitInfo.distance - 0.1f);
+        }
+        else
+        {
+            target.position = Camera.main.transform.position + Camera.main.transform.forward * distance;
+        }
+        target.rotation = Camera.main.transform.rotation;
     }
 
     private void OnLook(InputValue value)

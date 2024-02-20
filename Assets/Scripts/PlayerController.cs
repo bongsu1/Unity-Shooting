@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     [Header("Component")]
     [SerializeField] CharacterController controller;
     [SerializeField] Animator animator;
+    [SerializeField] WeaponHolder weaponHolder;
 
     [Header("Spec")]
     [SerializeField] float moveSpeed;
@@ -17,6 +18,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Test")]
     [SerializeField] MultiAimConstraint aim;
+    [SerializeField] MultiAimConstraint hand;
     [SerializeField] float rotateSpeed;
 
     private Vector3 moveDir;
@@ -62,6 +64,7 @@ public class PlayerController : MonoBehaviour
     public void Fire()
     {
         // 총쏘는 로직 구현
+        weaponHolder.Fire();
         animator.SetTrigger("Fire");
     } 
 
@@ -98,53 +101,53 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // 테스트용
+    enum State { Fire, Reload }
+    State state = State.Fire;
+
     private void OnFire(InputValue value)
     {
+        // 테스트용
+        if (state == State.Fire)
+            return;
+
         Fire();
 
         // 테스트용
+        state = State.Fire;
+        hand.weight = 0;
         StopAllCoroutines();
-        StartCoroutine(Draw(-rotateSpeed * Time.deltaTime));
+        StartCoroutine(Draw(-rotateSpeed, state));
     }
 
     private void OnReload(InputValue value)
     {
+        // 테스트용
+        if (state == State.Reload)
+            return;
+
         Reload();
 
         // 테스트용
+        state = State.Reload;
+        hand.weight = 1;
         StopAllCoroutines();
-        StartCoroutine(Draw(rotateSpeed * Time.deltaTime));
+        StartCoroutine(Draw(rotateSpeed, state));
     }
 
     // 테스트용
-    IEnumerator Draw(float time)
+    IEnumerator Draw(float rotate, State state)
     {
-        while (aim.weight > 0.01f && aim.weight < 0.99f)
+        if (state == State.Fire)
+            yield return new WaitForSeconds(1f);
+
+        while (true)
         {
-            aim.weight += time;
-            yield return new WaitForSeconds(Time.deltaTime);
+            aim.weight += rotate;
+            if (aim.weight < 0.01f || aim.weight > 0.99f)
+                break;
+
+            yield return new WaitForEndOfFrame();
         }
     }
-    // 박스캐스트
-    /*[Header("Box Cast")]
-    [SerializeField] Vector3 boxSize;
-    [SerializeField] float maxDistance;
-    [SerializeField] LayerMask groundCheck;
-
-    [Header("Gizmo")]
-    [SerializeField] bool drawGizmo;
-
-    private void OnDrawGizmos()
-    {
-        if (!drawGizmo)
-            return;
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawCube(transform.position - transform.up * maxDistance, boxSize);
-    }
-
-    public bool IsGround()
-    {
-        return Physics.BoxCast(transform.position, boxSize, -transform.up, transform.rotation, maxDistance, groundCheck);
-    }*/
 }
