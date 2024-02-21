@@ -10,7 +10,6 @@ public class Monster : MonoBehaviour, IDamagable
     public void TakeDamage(int damage)
     {
         hp -= damage;
-        rigid.AddForce(Vector3.up * 10f, ForceMode.Impulse);
         if (hp <= 0)
         {
             Die();

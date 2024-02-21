@@ -9,29 +9,38 @@ public class Gun : MonoBehaviour
     [SerializeField] float maxDistance;
     [SerializeField] LayerMask layerMask;
     [SerializeField] ParticleSystem muzzleFlash;
-    [SerializeField] ParticleSystem hitEffect;
-
-    [SerializeField] Transform hitPoint;
 
     enum WeaponType { Gun, Bow }
     [Header("Test")]
     [SerializeField] WeaponType weaponType;
 
+    [Header("Pool")]
+    [SerializeField] ParticlePool hitEffects;
+    [SerializeField] float returnTime;
+
+    IEnumerator ReturnRoutine(ParticleSystem hitEffect)
+    {
+        yield return new WaitForSeconds(returnTime);
+        hitEffects.ReturnPool(hitEffect);
+    }
+
     public void Fire()
     {
+        muzzleFlash.Play();
         if (weaponType == WeaponType.Gun)
         {
-            if (Physics.Raycast(muzzlePoint.position, muzzlePoint.forward, out RaycastHit hitInfo, maxDistance))
+            if (Physics.Raycast(muzzlePoint.position, muzzlePoint.forward, out RaycastHit hitInfo, maxDistance, layerMask))
             {
-                muzzleFlash.Play();
                 Debug.DrawRay(muzzlePoint.position, muzzlePoint.forward * hitInfo.distance, Color.red, 0.5f);
-                hitPoint.position = hitInfo.point;
 
                 IDamagable damagable = hitInfo.collider.GetComponent<IDamagable>();
                 damagable?.TakeDamage(damage);
 
-                ParticleSystem effect = Instantiate(hitEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
-                effect.transform.parent = hitInfo.transform;
+                // 오브젝트 풀링
+                ParticleSystem effect = hitEffects.GetPool(hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+                StartCoroutine(ReturnRoutine(effect));
+                /*ParticleSystem effect = Instantiate(hitEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+                effect.transform.parent = hitInfo.transform;*/
 
                 Rigidbody rigid = hitInfo.collider.GetComponent<Rigidbody>();
                 if (rigid != null)
@@ -41,20 +50,13 @@ public class Gun : MonoBehaviour
             }
             else
             {
-
                 Debug.DrawRay(muzzlePoint.position, muzzlePoint.forward * maxDistance, Color.red, 0.5f);
             }
         }
         else if (weaponType == WeaponType.Bow)
         {
-            // 레이캐스트가 충돌체에 닿았으면
             if (Physics.Raycast(muzzlePoint.position, muzzlePoint.forward, out RaycastHit hitInfo, maxDistance))
             {
-                if (muzzleFlash != null)
-                {
-                    Debug.Log("fire effect");
-                    muzzleFlash.Play();
-                }
                 // 레이캐스트 궤적
                 Debug.DrawRay(muzzlePoint.position, muzzlePoint.forward * hitInfo.distance, Color.green, 0.5f);
 
@@ -63,8 +65,8 @@ public class Gun : MonoBehaviour
                 damagable?.TakeDamage(damage);
 
                 // 충돌한 위치에 ParticleSytem 법선벡터 방향으로 재생
-                ParticleSystem particle = Instantiate(hitEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
-                particle.transform.parent = hitInfo.transform;
+                /*ParticleSystem particle = Instantiate(hitEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+                particle.transform.parent = hitInfo.transform;*/
 
                 // 충돌한 물체에 Rigidbody가 있으면 법선벡터 반대방향으로 힘 가해주기
                 Rigidbody rigid = hitInfo.collider.GetComponent<Rigidbody>();

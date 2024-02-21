@@ -102,41 +102,58 @@ public class PlayerController : MonoBehaviour
     }
 
     // 테스트용
-    enum State { Fire, Reload }
-    State state = State.Fire;
+    /*enum State { Fire, Reload }
+    State state = State.Fire;*/
 
+    Coroutine keep;
     private void OnFire(InputValue value)
     {
         // 테스트용
-        if (state == State.Fire)
-            return;
-
-        Fire();
+        /*if (state == State.Fire)
+            return;*/
+        
+        if (value.isPressed)
+        {
+            keep = StartCoroutine(KeepPush());
+        }
+        else
+        {
+            StopCoroutine(keep);
+        }
 
         // 테스트용
-        state = State.Fire;
+        /*state = State.Fire;
         hand.weight = 0;
         StopAllCoroutines();
-        StartCoroutine(Draw(-rotateSpeed, state));
+        StartCoroutine(Draw(-rotateSpeed, state));*/
+    }
+
+    IEnumerator KeepPush()
+    {
+        while (true)
+        {
+            Fire();
+            yield return new WaitForSeconds(0.2f);
+        }
     }
 
     private void OnReload(InputValue value)
     {
         // 테스트용
-        if (state == State.Reload)
-            return;
+        /*if (state == State.Reload)
+            return;*/
 
         Reload();
 
         // 테스트용
-        state = State.Reload;
+        /*state = State.Reload;
         hand.weight = 1;
         StopAllCoroutines();
-        StartCoroutine(Draw(rotateSpeed, state));
+        StartCoroutine(Draw(rotateSpeed, state));*/
     }
 
     // 테스트용
-    IEnumerator Draw(float rotate, State state)
+    /*IEnumerator Draw(float rotate, State state)
     {
         if (state == State.Fire)
             yield return new WaitForSeconds(1f);
@@ -149,5 +166,5 @@ public class PlayerController : MonoBehaviour
 
             yield return new WaitForEndOfFrame();
         }
-    }
+    }*/
 }
